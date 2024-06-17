@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install FNF Porter</title>
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/FNF-Porter/Porter.py/main/big-icon.webp" type="image/x-icon">
+
+    <style>
+        html {
+            background: linear-gradient(to right, #b227de, #b02754);
+        }
+
+        body {
+            display: flex;
+            justify-content:center;
+            align-items: center;
+        }
+
+        @font-face {
+            font-family: headings;
+            src: url(https://fnlookup.github.io/assets/fonts/HeadingNow-75Medium.ttf);
+        }
+
+        h1, h2, p, h3, a {
+            font-family: headings;
+            color: white;
+        }
+
+        h3 {
+            margin-bottom: 5rem;
+        }
+
+        .fortnite-button {
+            font-size: 23px;
+            padding: 1rem 1.5rem;
+            border-radius: 30px;
+            background-color: #f7ff19;
+            border: 0;
+            cursor: pointer;
+            color: #000;
+            text-decoration: none;
+            
+            margin-top: 5rem;
+        }
+
+        .fortnite-button:hover {
+            background-color: #f7ff19;
+        }
+
+        .fortnite-button-border {
+            --outline-width-hover: .25rem;
+            outline-width: 0;
+            outline-color: transparent;
+            outline-offset: .5rem;
+            outline-style: solid;
+            transition-duration: .15s;
+            transition-property: outline-color, outline-offset, outline-width;
+            transition-timing-function: ease-out;
+        }
+
+        .fortnite-button-border:hover {
+            outline-color: #fffc;
+            outline-offset: .1875rem;
+            outline-width: var(--outline-width-hover);
+        }
+    </style>
+</head>
+<body>
+    <div style="height: 100%; text-align: center;" id="body">
+        <h1>FNF Porter - GitHub Releases</h1>
+
+        <script>
+            fetch('https://api.github.com/repos/FNF-Porter/Porter.py/releases/latest').then(r => r.json()).then(r => {
+                console.log(r)
+
+                document.getElementById('body').innerHTML += '<h2>Release ' + r.name + '</h2>'
+                
+                for (let asset of r.assets) {
+                    document.getElementById('body').innerHTML += `<p>${asset.name}</p>
+                    <a href="${asset.browser_download_url}" class="fortnite-button fortnite-button-border">Download</a>
+                    `
+                }
+
+                document.getElementById('body').innerHTML += `<p>Uploaded by <a href="${r.author.html_url}">` + r.author.login + '</a></p>'
+            })
+        </script>
+    </div>
+</body>
+</html>

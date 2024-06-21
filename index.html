@@ -22,13 +22,24 @@
             src: url(https://fnlookup.github.io/assets/fonts/HeadingNow-75Medium.ttf);
         }
 
-        h1, h2, p, h3, a {
+        h1, h2, p, h3, a, ul, li {
             font-family: headings;
             color: white;
         }
 
         h3 {
             margin-bottom: 5rem;
+        }
+
+        .uploader-details {
+            display: flex;
+            align-items: center;
+        }
+
+        .uploader-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
         }
 
         .fortnite-button {
@@ -49,6 +60,7 @@
         }
 
         .fortnite-button-border {
+            margin-left: 3rem;
             --outline-width-hover: .25rem;
             outline-width: 0;
             outline-color: transparent;
@@ -65,24 +77,62 @@
             outline-width: var(--outline-width-hover);
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div style="height: 100%; text-align: center;" id="body">
-        <h1>FNF Porter - GitHub Releases</h1>
+    <div style="height: 100%;" id="body">
+        <h1>FNF Porter - Install</h1>
 
         <script>
             fetch('https://api.github.com/repos/FNF-Porter/Porter.py/releases/latest').then(r => r.json()).then(r => {
                 console.log(r)
 
-                document.getElementById('body').innerHTML += '<h2>Release ' + r.name + '</h2>'
+                function dateThingy(date) {
+                    var currentDate = new Date();
+                    var currentYear = currentDate.getUTCFullYear();
+                    var currentMonth = currentDate.getUTCMonth();
+                    var currentDay = currentDate.getUTCDate();
+                    if (date.getUTCFullYear() === currentYear && date.getUTCMonth() === currentMonth && date.getUTCDate() === currentDay && justToday) {
+                        return "Today";
+                    }
+
+                    var units = {
+                        year: 24 * 60 * 60 * 1000 * 365,
+                        month: 24 * 60 * 60 * 1000 * 365 / 12,
+                        day: 24 * 60 * 60 * 1000,
+                        hour: 60 * 60 * 1000,
+                        minute: 60 * 1000,
+                        second: 1000
+                    }
+
+                    var rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+
+                    var getRelativeTime = (date, date2 = new Date()) => {
+                        var elapsed = date - date2
+
+                        // "Math.abs" accounts for both "past" & "future" scenarios
+                        for (var u in units)
+                            if (Math.abs(elapsed) > units[u] || u == 'second')
+                                return rtf.format(Math.round(elapsed / units[u]), u)
+                    }
+
+                    return getRelativeTime(date)
+
+                    // stack overflow thx
+                }
+
+                document.getElementById('body').innerHTML += '<h2>Release ' + r.name + ` - ${dateThingy(new Date(r.published_at))}<a href="https://github.com/FNF-Porter/Porter.py/tree/${r.tag_name}" class="fortnite-button fortnite-button-border">Source code</a></h2>`
+
+                document.getElementById('body').innerHTML += '<p>' + marked.parse(r.body) + '</p>'
+
+                document.getElementById('body').innerHTML += '<h2>Assets</h2>'
                 
                 for (let asset of r.assets) {
-                    document.getElementById('body').innerHTML += `<p>${asset.name}</p>
-                    <a href="${asset.browser_download_url}" class="fortnite-button fortnite-button-border">Download</a>
+                    document.getElementById('body').innerHTML += `<p>${asset.name}<a href="${asset.browser_download_url}" class="fortnite-button fortnite-button-border">Download</a></p>
                     `
                 }
 
-                document.getElementById('body').innerHTML += `<p>Uploaded by <a href="${r.author.html_url}">` + r.author.login + '</a></p>'
+                document.getElementById('body').innerHTML += `<p class="uploader-details"><img class="uploader-icon" src="${r.author.avatar_url}"><a href="${r.author.html_url}">` + r.author.login + '</a></p>'
             })
         </script>
     </div>

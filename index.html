@@ -10,7 +10,7 @@
 
     <style>
         html {
-            background: linear-gradient(to right, #b227de, #b02754);
+            background: linear-gradient(to right, rgb(48, 10, 59), #3f0e1e);
         }
 
         body {
@@ -89,17 +89,90 @@
             outline-width: var(--outline-width-hover);
         }
 
-        #likers {
+        .online {
+            position: relative;
+        }
+
+        .online::before {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            background-color: greenyellow;
+            content: '';
+            left: 29px;
+            bottom: 0px;
+        }
+
+        .bananapoints {
+            padding-left: 1rem;
+            color: greenyellow;
+        }
+
+        .bananapoints::after {
+            content: "Þ"
+        }
+
+        .likers, .subs {
             display: flex;
             max-width: 700px;
             flex-wrap: wrap;
         }
 
-        #likers p {
+        #likers p,
+        #subs p {
             flex: 30%;
+        }
+
+        .collapsed {
+            display: none;
+        }
+
+        h1, h2 {
+            position: relative;
+        }
+
+        .collapse-button {
+            position: absolute;
+            left: -2rem;
+            cursor: pointer;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        function dateThingy(date, justToday = true) {
+            var currentDate = new Date();
+            var currentYear = currentDate.getUTCFullYear();
+            var currentMonth = currentDate.getUTCMonth();
+            var currentDay = currentDate.getUTCDate();
+            if (date.getUTCFullYear() === currentYear && date.getUTCMonth() === currentMonth && date.getUTCDate() === currentDay && justToday) {
+                return "today";
+            }
+
+            var units = {
+                year: 24 * 60 * 60 * 1000 * 365,
+                month: 24 * 60 * 60 * 1000 * 365 / 12,
+                day: 24 * 60 * 60 * 1000,
+                hour: 60 * 60 * 1000,
+                minute: 60 * 1000,
+                second: 1000
+            }
+
+            var rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+
+            var getRelativeTime = (date, date2 = new Date()) => {
+                var elapsed = date - date2
+
+                // "Math.abs" accounts for both "past" & "future" scenarios
+                for (var u in units)
+                    if (Math.abs(elapsed) > units[u] || u == 'second')
+                        return rtf.format(Math.round(elapsed / units[u]), u)
+            }
+
+            return getRelativeTime(date)
+
+            // stack overflow thx
+        }
+    </script>
 </head>
 
 <body>
@@ -110,40 +183,6 @@
             <script>
                 fetch('https://api.github.com/repos/FNF-Porter/Porter.py/releases/latest').then(r => r.json()).then(r => {
                     console.log(r)
-
-                    function dateThingy(date) {
-                        var currentDate = new Date();
-                        var currentYear = currentDate.getUTCFullYear();
-                        var currentMonth = currentDate.getUTCMonth();
-                        var currentDay = currentDate.getUTCDate();
-                        if (date.getUTCFullYear() === currentYear && date.getUTCMonth() === currentMonth && date.getUTCDate() === currentDay && justToday) {
-                            return "Today";
-                        }
-
-                        var units = {
-                            year: 24 * 60 * 60 * 1000 * 365,
-                            month: 24 * 60 * 60 * 1000 * 365 / 12,
-                            day: 24 * 60 * 60 * 1000,
-                            hour: 60 * 60 * 1000,
-                            minute: 60 * 1000,
-                            second: 1000
-                        }
-
-                        var rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
-
-                        var getRelativeTime = (date, date2 = new Date()) => {
-                            var elapsed = date - date2
-
-                            // "Math.abs" accounts for both "past" & "future" scenarios
-                            for (var u in units)
-                                if (Math.abs(elapsed) > units[u] || u == 'second')
-                                    return rtf.format(Math.round(elapsed / units[u]), u)
-                        }
-
-                        return getRelativeTime(date)
-
-                        // stack overflow thx
-                    }
 
                     document.getElementById('release').innerHTML += '<h2>Release ' + r.name + ` - ${dateThingy(new Date(r.published_at))}<a href="https://github.com/FNF-Porter/Porter.py/tree/${r.tag_name}" class="fortnite-button fortnite-button-border">Source code</a></h2>`
 
@@ -162,34 +201,103 @@
         </div>
 
         <h1>Special Thanks to</h1>
-        <h2>Our Likers</h2>
+        <h2><a class="collapse-button" collapseid="likers" iscollapsed="false">-</a>Our Likers</h2>
 
-        <div id="likers">
+        <div id="likers" class="likers">
             <p id="loading">Loading...</p>
 
             <script>
                 let currentPage = 1
-                function fetchPage(page) {
+                function fetchPageLikes(page) {
                     fetch('https://gamebanana.com/apiv11/Tool/16982/Likes?_nPage=' + page).then(r => r.json()).then(r => {
-                        console.log(r)
+                        //console.log(r)
 
                         for (let liker of r._aRecords) {
-                            //console.log(liker)
-                            document.getElementById('likers').innerHTML += `<p class="uploader-details">
+                            document.getElementById('likers').innerHTML += `<p class="uploader-details${liker._aSubmitter._bIsOnline ? ' online' : ""}" title="${dateThingy(new Date(liker._tsDateAdded * 1000))}">
                                 <img class="uploader-icon" src="${liker._aSubmitter._sAvatarUrl}">
                                 <a href="${liker._aSubmitter._sProfileUrl}">` + 
                                     `${liker._aSubmitter._sUpicUrl == undefined ? `${liker._aSubmitter._sSubjectShaperCssCode == undefined ? '' : `<a href="${liker._aSubmitter._sProfileUrl}" style="${liker._aSubmitter._sSubjectShaperCssCode}">`}${liker._aSubmitter._sName}</a>` : `<img src=${liker._aSubmitter._sUpicUrl}>`}` + '</a></p>'
                         }
 
                         currentPage += 1
-                        if (!r._aMetadata._bIsComplete) fetchPage(currentPage)
+                        if (!r._aMetadata._bIsComplete) fetchPageLikes(currentPage)
                         else document.getElementById('loading').remove()
                     })
                 }
 
-                fetchPage(currentPage)
+                fetchPageLikes(currentPage)
             </script>
         </div>
+
+        <h2><a class="collapse-button" collapseid="thankers" iscollapsed="false">-</a>Our Thankers</h2>
+
+        <div id="thankers">
+            <script>
+                let currentPageThxs = 1
+                function fetchPageThanks(page) {
+                    fetch('https://gamebanana.com/apiv11/Tool/16982/Thanks?_nPage=' + page).then(r => r.json()).then(r => {
+                        //console.log(r)
+
+                        for (let liker of r._aRecords) {
+                            //console.log(liker)
+                            document.getElementById('thankers').innerHTML += `<p class="uploader-details${liker._aSubmitter._bIsOnline ? ' online' : ""}" title="${dateThingy(new Date(liker._tsDateAdded * 1000))}">
+                                <img class="uploader-icon" src="${liker._aSubmitter._sAvatarUrl}">
+                                <a href="${liker._aSubmitter._sProfileUrl}">` + 
+                                    `${liker._aSubmitter._sUpicUrl == undefined ? `${liker._aSubmitter._sSubjectShaperCssCode == undefined ? '' : `<a href="${liker._aSubmitter._sProfileUrl}" style="${liker._aSubmitter._sSubjectShaperCssCode}">`}${liker._aSubmitter._sName}</a>` : `<img src=${liker._aSubmitter._sUpicUrl}>`}` + `<a class="bananapoints">${liker._nAmount}</a></a></p>`
+                        }
+
+                        currentPageThxs += 1
+                        if (!r._aMetadata._bIsComplete) fetchPageThanks(currentPageThxs)
+                        //else document.getElementById('loading').remove()
+                    })
+                }
+
+                fetchPageThanks(currentPageThxs)
+            </script>
+        </div>
+
+        <h2><a class="collapse-button" collapseid="subs" iscollapsed="false">-</a>Our Subscribers</h2>
+
+        <div id="subs" class="subs">
+            <script>
+                let currentPageSubs = 1
+                function fetchPageSubs(page) {
+                    fetch('https://gamebanana.com/apiv11/Tool/16982/Subscribers?_nPage=' + page).then(r => r.json()).then(r => {
+                        //console.log(r)
+
+                        for (let liker of r._aRecords) {
+                            //console.log(liker)
+                            document.getElementById('subs').innerHTML += `<p class="uploader-details${liker._aSubscriber._bIsOnline ? ' online' : ""}" title="${dateThingy(new Date(liker._tsDateAdded * 1000))}">
+                                <img class="uploader-icon" src="${liker._aSubscriber._sAvatarUrl}">
+                                <a href="${liker._aSubscriber._sProfileUrl}">` + 
+                                    `${liker._aSubscriber._sUpicUrl == undefined ? `${liker._aSubscriber._sSubjectShaperCssCode == undefined ? '' : `<a href="${liker._aSubscriber._sProfileUrl}" style="${liker._aSubscriber._sSubjectShaperCssCode}">`}${liker._aSubscriber._sName}</a>` : `<img src=${liker._aSubscriber._sUpicUrl}>`}` + '</a></p>'
+                        }
+
+                        currentPageSubs += 1
+                        if (!r._aMetadata._bIsComplete) fetchPageSubs(currentPageSubs)
+                        //else document.getElementById('loading').remove()
+                    })
+                }
+
+                fetchPageSubs(currentPageSubs)
+            </script>
+        </div>
+
+        <script>
+            for (let collapse of document.querySelectorAll('[collapseid]')) {
+                collapse.onclick = function() {
+                    document.getElementById(collapse.getAttribute('collapseid')).classList.toggle('collapsed')
+
+                    if (collapse.getAttribute('iscollapsed') == 'false') {
+                        collapse.setAttribute('iscollapsed', 'true')
+                        collapse.innerHTML = '+';
+                    } else if (collapse.getAttribute('iscollapsed') == 'true') {
+                        collapse.setAttribute('iscollapsed', 'false')
+                        collapse.innerHTML = '-';
+                    }
+                }
+            }
+        </script>
     </div>
 </body>
 
